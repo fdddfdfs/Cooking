@@ -1,22 +1,27 @@
-﻿public class InventoryCell
+﻿using UnityEngine;
+
+public class InventoryCell
 {
     private readonly int _index;
     private readonly InventoryView _inventoryView;
-
-    private InventoryItemData _itemData;
+    
+    public ItemType CellRestriction { get; private set; }
+    
+    public InventoryItemData ItemData { get; private set; }
     
     public int Count { get; private set; }
 
-    public InventoryCell(int index, InventoryView inventoryView)
+    public InventoryCell(int index, InventoryView inventoryView, ItemType cellRestriction)
     {
+        _inventoryView = inventoryView;
         Clear();
         _index = index;
-        _inventoryView = inventoryView;
+        CellRestriction = cellRestriction;
     }
 
     public void ChangeItemData(InventoryItemData newData, int newCount)
     {
-        _itemData = newData;
+        ItemData = newData;
         Count = newCount;
         UpdateView();
     }
@@ -25,7 +30,7 @@
     {
         int newValue = Count + addingCount;
 
-        Count = newValue > _itemData.MaxStack ? _itemData.MaxStack : newValue;
+        Count = newValue > ItemData.MaxStack ? ItemData.MaxStack : newValue;
         UpdateView();
         
         return newValue - Count;
@@ -47,23 +52,30 @@
 
     public bool IsFull()
     {
-        return _itemData.MaxStack == Count;
+        return ItemData.MaxStack == Count;
     }
 
     public bool IsEquals(InventoryItemData inventoryItemData)
     {
-        return inventoryItemData.Name == _itemData.Name;
+        if (ItemData == null) return false;
+        
+        return inventoryItemData.Name == ItemData.Name;
+    }
+
+    public bool IsRestricted(ItemType itemType)
+    {
+        return (itemType & CellRestriction) == 0;
     }
 
     private void Clear()
     {
         Count = 0;
-        _itemData = null;
+        ItemData = null;
         UpdateView();
     }
 
     private void UpdateView()
     {
-        _inventoryView.UpdateItem(_index, Count, _itemData);
+        _inventoryView.UpdateItem(_index, Count, ItemData);
     }
 }

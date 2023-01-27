@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 public class Inventory
 {
@@ -11,13 +12,17 @@ public class Inventory
     private readonly InventoryCell[] _inventory;
     private readonly InventoryCell[] _gear;
     
-    public Inventory()
+    public Inventory(Canvas canvas)
     {
         _inventoryView = ResourcesLoader.InstantiateLoadComponent<InventoryView>(InventoryViewResourceName);
-        _inventoryView.Init(InventoryGearSize, InventoryMainSize);
+        _inventoryView.Init(this, InventoryGearSize, InventoryMainSize);
+        _inventoryView.transform.SetParent(canvas.transform, false);
 
-        _inventory = CreateInventoryCells(InventoryMainSize, 0 );
-        _gear = CreateInventoryCells(InventoryGearSize, InventoryMainSize);
+        _inventory = CreateInventoryCells(InventoryMainSize, 0 , ItemType.Unspecified);
+        _gear = CreateInventoryCells(
+            InventoryGearSize,
+            InventoryMainSize,
+            new[] { ItemType.Head, ItemType.Chest, ItemType.Legs, ItemType.Boots });
     }
     
     public int AddItem(InventoryItemData item, int count)
@@ -38,7 +43,7 @@ public class Inventory
                     }
                 }
             }
-            else if (_inventory[i] == null && firstEmptyIndex == -1)
+            else if (_inventory[i].ItemData == null && firstEmptyIndex == -1)
             {
                 firstEmptyIndex = i;
             }
@@ -73,6 +78,24 @@ public class Inventory
         throw new Exception($"IsEnoughItems return true, but {count} item count left");
     }
 
+    public void SwapItems(int fromIndex, int toIndex)
+    {
+        InventoryCell fromCell = GetCell(fromIndex);
+        InventoryCell toCell = GetCell(toIndex);
+
+        if (toCell.ItemData != null && fromCell.IsRestricted(toCell.ItemData.ItemType) ||
+            fromCell.ItemData != null && toCell.IsRestricted(fromCell.ItemData.ItemType))
+        {
+            return;
+        }
+        
+        int countFrom = fromCell.Count;
+        InventoryItemData itemDataFrom = fromCell.ItemData;
+        
+        fromCell.ChangeItemData(toCell.ItemData, toCell.Count);
+        toCell.ChangeItemData(itemDataFrom, countFrom);
+    }
+
     private bool IsEnoughItems(InventoryItemData item, int count)
     {
         for (int i = InventoryMainSize - 1; i >= 0; i--)
@@ -91,14 +114,35 @@ public class Inventory
         return false;
     }
 
-    private InventoryCell[] CreateInventoryCells(int count, int indexOffset)
+    private InventoryCell[] CreateInventoryCells(int count, int indexOffset, ItemType cellType)
     {
         var inventoryCells = new InventoryCell[count];
         for (int i = 0; i < count; i++)
         {
-            inventoryCells[i] = new InventoryCell(i + indexOffset, _inventoryView);
+            inventoryCells[i] = new InventoryCell(i + indexOffset, _inventoryView, cellType);
         }
 
         return inventoryCells;
+    }
+    
+    private InventoryCell[] CreateInventoryCells(int count, int indexOffset, ItemType[] cellTypes)
+    {
+        var inventoryCells = new InventoryCell[count];
+        for (int i = 0; i < count; i++)
+        {
+            inventoryCells[i] = new InventoryCell(i + indexOffset, _inventoryView, cellTypes[i]);
+        }
+
+        return inventoryCells;
+    }
+
+    private InventoryCell GetCell(int index)
+    {
+        if (index >= InventoryMainSize)
+        {
+            return _gear[index - InventoryMainSize];
+        }
+        
+        return _inventory[index];
     }
 }

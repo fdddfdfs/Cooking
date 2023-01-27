@@ -1,7 +1,8 @@
 ﻿using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
-public class InventoryView : MonoBehaviour
+public class InventoryView : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDragHandler
 {
     private const string InventoryCellResourceName = "InventoryCell";
 
@@ -14,11 +15,15 @@ public class InventoryView : MonoBehaviour
     private InventoryCellView[] _mainInventoryCells;
     private int _inventoryGearSize;
     private int _inventoryMainSize;
+    private Inventory _inventory;
 
-    public void Init(int inventoryGearSize, int inventoryMainSize)
+    private int _dragCellId;
+
+    public void Init(Inventory inventory, int inventoryGearSize, int inventoryMainSize)
     {
         _inventoryGearSize = inventoryGearSize;
         _inventoryMainSize = inventoryMainSize;
+        _inventory = inventory;
         
         GameObject inventoryCell = ResourcesLoader.LoadObject(InventoryCellResourceName);
         inventoryCell = Instantiate(inventoryCell);
@@ -59,9 +64,41 @@ public class InventoryView : MonoBehaviour
         {
             cells[i] = ResourcesLoader.InstantiateLoadedComponent<InventoryCellView>(prefab);
             cells[i].Init(i + idOffset);
-            cells[i].transform.parent = parent;
+            cells[i].transform.SetParent(parent, false);
         }
 
         return cells;
+    }
+
+
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        if (eventData.pointerEnter == null) return;
+        
+        var inventoryCellView = eventData.pointerEnter.GetComponentInParent<InventoryCellView>();
+        if (inventoryCellView)
+        {
+            _dragCellId = inventoryCellView.ID;
+        }
+        else
+        {
+            _dragCellId = -1;
+        }
+    }
+
+    public void OnEndDrag(PointerEventData eventData)
+    {
+        if (eventData.pointerEnter == null || _dragCellId == -1) return;
+
+        var inventoryCellView = eventData.pointerEnter.GetComponentInParent<InventoryCellView>();
+        if (inventoryCellView)
+        {
+            _inventory.SwapItems(_dragCellId, inventoryCellView.ID);
+        }
+    }
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        
     }
 }

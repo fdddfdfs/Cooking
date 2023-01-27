@@ -9,13 +9,13 @@ public class InventoryCellView : MonoBehaviour
     [SerializeField] private Sprite _emptyItemSprite;
 
     private readonly string _zeroCount = string.Empty;
-    
-    private int _id;
     private bool _isEmpty;
+    
+    public int ID { get; private set; }
 
     public void Init(int id)
     {
-        _id = id;
+        ID = id;
         _isEmpty = true;
         _count.text = _zeroCount;
     }
