@@ -6,12 +6,14 @@ public class Inventory
     private const string InventoryViewResourceName = "InventoryView";
     private const int InventoryGearSize = 4;
     private const int InventoryMainSize = 36;
-    
+    private const int InventoryHotspotSize = 9;
+    private const int InventoryHotspotStartIndex = InventoryMainSize - InventoryHotspotSize - 1;
+
     private readonly InventoryView _inventoryView;
 
     private readonly InventoryCell[] _inventory;
     private readonly InventoryCell[] _gear;
-    
+
     public Inventory(Canvas canvas)
     {
         _inventoryView = ResourcesLoader.InstantiateLoadComponent<InventoryView>(InventoryViewResourceName);
@@ -94,6 +96,11 @@ public class Inventory
         
         fromCell.ChangeItemData(toCell.ItemData, toCell.Count);
         toCell.ChangeItemData(itemDataFrom, countFrom);
+    }
+
+    public InventoryItemData GetHotspotItem(int index)
+    {
+        return _inventory[InventoryHotspotStartIndex].ItemData;
     }
 
     private bool IsEnoughItems(InventoryItemData item, int count)
