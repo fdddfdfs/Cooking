@@ -50,7 +50,7 @@ public class Building
 
     public void ChangeBuildingActive(bool state)
     {
-        _currentBuilding.SetActive(false);
+        _currentBuilding.SetActive(state);
     }
     
     public void UpdateBuildableObject()
