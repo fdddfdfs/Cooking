@@ -8,5 +8,7 @@ public enum ItemType
     Legs = 4,
     Chest = 8,
     Head = 16,
+    Turret = 32,
+    Trap = 64,
     Unspecified = Resource | Boots | Legs | Chest | Head,
 }
