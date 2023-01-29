@@ -5,23 +5,23 @@ public abstract class BuildableItem : Item, IUsable, IUpdatable, IShowable
     private readonly Building _building;
     private readonly Inventory _inventory;
     
-    private GameObject _buildableItem;
+    protected GameObject _buildableItem;
     
     protected abstract string BuildingResourceName { get; }
 
-    protected BuildableItem(Building building, Inventory inventory, InventoryItemData itemData) : base(itemData)
+    protected BuildableItem(Building building, Inventory inventory, ItemData itemData) : base(itemData)
     {
         _building = building;
         _inventory = inventory;
         _buildableItem = ResourcesLoader.LoadObject(BuildingResourceName);
-        _buildableItem = Object.Instantiate(_buildableItem);
+        InstantiateNewBuilding();
     }
 
     public void Use()
     {
         if (_building.SetBuilding())
         {
-            _buildableItem = Object.Instantiate(_buildableItem);
+            InstantiateNewBuilding();
             _building.UpdateBuilding(_buildableItem);
             _inventory.RemoveItem(_itemData, 1);
         }
@@ -41,5 +41,10 @@ public abstract class BuildableItem : Item, IUsable, IUpdatable, IShowable
     public void Hide()
     {
         _building.ChangeBuildingActive(false);
+    }
+
+    protected virtual void InstantiateNewBuilding()
+    {
+        _buildableItem = Object.Instantiate(_buildableItem);
     }
 }
