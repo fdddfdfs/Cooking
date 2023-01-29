@@ -1,8 +1,8 @@
 ﻿public abstract class Item
 {
-    protected InventoryItemData _itemData;
+    protected ItemData _itemData;
     
-    protected Item(InventoryItemData itemData)
+    protected Item(ItemData itemData)
     {
         _itemData = itemData;
     }

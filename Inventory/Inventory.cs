@@ -27,7 +27,7 @@ public class Inventory
             new[] { ItemType.Head, ItemType.Chest, ItemType.Legs, ItemType.Boots });
     }
     
-    public int AddItem(InventoryItemData item, int count)
+    public int AddItem(ItemData item, int count)
     {
         int firstEmptyIndex = -1;
         
@@ -60,7 +60,7 @@ public class Inventory
         return count;
     }
 
-    public bool RemoveItem(InventoryItemData item, int count)
+    public bool RemoveItem(ItemData item, int count)
     {
         if (!IsEnoughItems(item, count)) return false;
 
@@ -92,18 +92,18 @@ public class Inventory
         }
         
         int countFrom = fromCell.Count;
-        InventoryItemData itemDataFrom = fromCell.ItemData;
+        ItemData itemDataFrom = fromCell.ItemData;
         
         fromCell.ChangeItemData(toCell.ItemData, toCell.Count);
         toCell.ChangeItemData(itemDataFrom, countFrom);
     }
 
-    public InventoryItemData GetHotspotItem(int index)
+    public ItemData GetHotspotItem(int index)
     {
         return _inventory[InventoryHotspotStartIndex].ItemData;
     }
 
-    private bool IsEnoughItems(InventoryItemData item, int count)
+    private bool IsEnoughItems(ItemData item, int count)
     {
         for (int i = InventoryMainSize - 1; i >= 0; i--)
         {

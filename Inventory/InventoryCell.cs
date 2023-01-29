@@ -7,7 +7,7 @@ public class InventoryCell
     
     public ItemType CellRestriction { get; private set; }
     
-    public InventoryItemData ItemData { get; private set; }
+    public ItemData ItemData { get; private set; }
     
     public int Count { get; private set; }
 
@@ -19,7 +19,7 @@ public class InventoryCell
         CellRestriction = cellRestriction;
     }
 
-    public void ChangeItemData(InventoryItemData newData, int newCount)
+    public void ChangeItemData(ItemData newData, int newCount)
     {
         ItemData = newData;
         Count = newCount;
@@ -55,11 +55,11 @@ public class InventoryCell
         return ItemData.MaxStack == Count;
     }
 
-    public bool IsEquals(InventoryItemData inventoryItemData)
+    public bool IsEquals(ItemData itemData)
     {
         if (ItemData == null) return false;
         
-        return inventoryItemData.Name == ItemData.Name;
+        return itemData.Name == ItemData.Name;
     }
 
     public bool IsRestricted(ItemType itemType)

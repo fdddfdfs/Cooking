@@ -4,12 +4,17 @@ public class Items
 {
     public Dictionary<ItemType, Item> AllItems { get; }
 
-    public Items(Building building, Inventory inventory, InventoryItemData trapData, InventoryItemData turretData)
+    public Items(
+        Building building,
+        Inventory inventory,
+        ItemData trapData,
+        ItemData turretData,
+        IEnemiesCollection enemiesCollection)
     {
         AllItems = new Dictionary<ItemType, Item>
         {
             [ItemType.Trap] = new Trap(building, inventory, trapData),
-            [ItemType.Turret] = new Turret(building, inventory, turretData),
+            [ItemType.Turret] = new Turret(building, inventory, turretData, enemiesCollection),
         };
     }
 }

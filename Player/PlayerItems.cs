@@ -12,9 +12,14 @@ public class PlayerItems : IUpdatable
     private IUpdatable _updatableItem;
     private IUsable _usableItem;
     
-    public PlayerItems(Building building, Inventory inventory, InventoryItemData trapData, InventoryItemData turretData)
+    public PlayerItems(
+        Building building,
+        Inventory inventory,
+        ItemData trapData,
+        ItemData turretData,
+        IEnemiesCollection enemiesCollection)
     {
-        _items = new Items(building, inventory, trapData, turretData);
+        _items = new Items(building, inventory, trapData, turretData, enemiesCollection);
         
         _digitsKeys = new List<KeyControl>
         {

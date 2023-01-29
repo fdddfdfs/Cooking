@@ -32,9 +32,9 @@ public class InventoryView : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
         _mainInventoryCells = CreateCells(_inventoryMainSize,0, inventoryCell, _mainInventory);
     }
     
-    public void UpdateItem(int index, int newCount, InventoryItemData inventoryItemData)
+    public void UpdateItem(int index, int newCount, ItemData itemData)
     {
-        Sprite itemSprite = inventoryItemData ? inventoryItemData.Sprite : null;
+        Sprite itemSprite = itemData ? itemData.Sprite : null;
         
         if (index > _inventoryMainSize)
         {
@@ -48,13 +48,13 @@ public class InventoryView : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
             _mainInventoryCells[index].ChangeCellItemCount(newCount);
         }
         
-        UpdateCurrentItem(inventoryItemData);
+        UpdateCurrentItem(itemData);
     }
 
-    private void UpdateCurrentItem(InventoryItemData inventoryItemData)
+    private void UpdateCurrentItem(ItemData itemData)
     {
-        _currentItemName.text = inventoryItemData ? inventoryItemData.Name : string.Empty;
-        _currentItemDescription.text = inventoryItemData ? inventoryItemData.Description : string.Empty;
+        _currentItemName.text = itemData ? itemData.Name : string.Empty;
+        _currentItemDescription.text = itemData ? itemData.Description : string.Empty;
     }
 
     private static InventoryCellView[] CreateCells(int size,int idOffset, GameObject prefab, Transform parent)
