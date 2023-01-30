@@ -27,7 +27,7 @@ public class Building
         
         _overlappedColliders = new Collider[OverlappedCollidersMaxSize];
         _layerMask = LayerMask.GetMask("Terrain");
-        _layerMaskForCollider = -1;
+        _layerMaskForCollider = LayerMask.GetMask("Terrain", "Default");
         _buildingPreview = new Preview();
     }
 
@@ -59,8 +59,8 @@ public class Building
         if (newPosition != default)
         {
             _buildingPreview.Building.transform.position =
-                newPosition + 
-                Vector3.up * _buildingPreview.BuildingCollider.size.y/2;
+                newPosition +
+                Vector3.up * _buildingPreview.BuildingCollider.size.y / 2;
             
             _buildingPreview.ChangeActive(true);
             ChangePreviewMesh();
@@ -105,8 +105,8 @@ public class Building
             _overlappedColliders,
             previewCollider.gameObject.transform.rotation,
             layerMask);
-        
-        if (overlapCount > 1)
+
+        if (overlapCount > 0)
         {
             return true;
         }
