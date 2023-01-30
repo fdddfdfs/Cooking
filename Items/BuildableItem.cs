@@ -4,17 +4,17 @@ public abstract class BuildableItem : Item, IUsable, IUpdatable, IShowable
 {
     private readonly Building _building;
     private readonly Inventory _inventory;
-    
+
     protected GameObject _buildableItem;
     
+    private GameObject _prefab;
+
     protected abstract string BuildingResourceName { get; }
 
     protected BuildableItem(Building building, Inventory inventory, ItemData itemData) : base(itemData)
     {
         _building = building;
         _inventory = inventory;
-        _buildableItem = ResourcesLoader.LoadObject(BuildingResourceName);
-        InstantiateNewBuilding();
     }
 
     public void Use()
@@ -34,6 +34,11 @@ public abstract class BuildableItem : Item, IUsable, IUpdatable, IShowable
 
     public void Show()
     {
+        if (!_buildableItem)
+        {
+            InstantiateNewBuilding();
+        }
+        
         _building.UpdateBuilding(_buildableItem);
         _building.ChangeBuildingActive(true);
     }
@@ -45,6 +50,11 @@ public abstract class BuildableItem : Item, IUsable, IUpdatable, IShowable
 
     protected virtual void InstantiateNewBuilding()
     {
-        _buildableItem = Object.Instantiate(_buildableItem);
+        if (!_prefab)
+        {
+            _prefab = ResourcesLoader.LoadObject(BuildingResourceName);
+        }
+        
+        _buildableItem = Object.Instantiate(_prefab);
     }
 }
