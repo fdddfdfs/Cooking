@@ -31,6 +31,28 @@ public class InventoryView : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
         _gearCells = CreateCells(_inventoryGearSize, _inventoryMainSize, inventoryCell, _gear);
         _mainInventoryCells = CreateCells(_inventoryMainSize,0, inventoryCell, _mainInventory);
     }
+
+    public void ChangeActive(bool active)
+    {
+        gameObject.SetActive(active);
+    }
+
+    public void SwapActive()
+    {
+        if (gameObject.activeSelf)
+        {
+            gameObject.SetActive(false);
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
+        }
+        else
+        {
+            gameObject.SetActive(true);
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+        }
+
+    }
     
     public void UpdateItem(int index, int newCount, ItemData itemData)
     {

@@ -7,12 +7,14 @@ public class Inventory
     private const int InventoryGearSize = 4;
     private const int InventoryMainSize = 36;
     private const int InventoryHotspotSize = 9;
-    private const int InventoryHotspotStartIndex = InventoryMainSize - InventoryHotspotSize - 1;
+    private const int InventoryHotspotStartIndex = InventoryMainSize - InventoryHotspotSize;
 
     private readonly InventoryView _inventoryView;
 
     private readonly InventoryCell[] _inventory;
     private readonly InventoryCell[] _gear;
+
+    public event Action InventoryChanged; 
 
     public Inventory(Canvas canvas)
     {
@@ -25,11 +27,24 @@ public class Inventory
             InventoryGearSize,
             InventoryMainSize,
             new[] { ItemType.Head, ItemType.Chest, ItemType.Legs, ItemType.Boots });
+
+        ChangeActive(false);
+    }
+
+    public void ChangeActive(bool active)
+    {
+        _inventoryView.ChangeActive(active);
+    }
+
+    public void SwapActive()
+    {
+        _inventoryView.SwapActive();
     }
     
     public int AddItem(ItemData item, int count)
     {
         int firstEmptyIndex = -1;
+        int initialCount = count;
         
         for (var i = 0; i < InventoryMainSize; i++)
         {
@@ -41,6 +56,7 @@ public class Inventory
 
                     if (count == 0)
                     {
+                        InventoryChanged?.Invoke();
                         return 0;
                     }
                 }
@@ -54,9 +70,15 @@ public class Inventory
         if (firstEmptyIndex != -1)
         {
             _inventory[firstEmptyIndex].ChangeItemData(item, count);
+            InventoryChanged?.Invoke();
             return 0;
         }
 
+        if (count != initialCount)
+        {
+            InventoryChanged?.Invoke();
+        }
+        
         return count;
     }
 
@@ -72,6 +94,7 @@ public class Inventory
 
                 if (count == 0)
                 {
+                    InventoryChanged?.Invoke();
                     return true;
                 }
             }
@@ -96,11 +119,13 @@ public class Inventory
         
         fromCell.ChangeItemData(toCell.ItemData, toCell.Count);
         toCell.ChangeItemData(itemDataFrom, countFrom);
+
+        InventoryChanged?.Invoke();
     }
 
     public ItemData GetHotspotItem(int index)
     {
-        return _inventory[InventoryHotspotStartIndex].ItemData;
+        return _inventory[InventoryHotspotStartIndex + index].ItemData;
     }
 
     private bool IsEnoughItems(ItemData item, int count)

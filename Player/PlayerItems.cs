@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 
@@ -6,11 +7,14 @@ public class PlayerItems : IUpdatable
 {
     private readonly Items _items;
     private readonly IReadOnlyList<KeyControl> _digitsKeys;
-    private Inventory _inventory;
+    private readonly Inventory _inventory;
 
     private IShowable _showableItem;
     private IUpdatable _updatableItem;
     private IUsable _usableItem;
+    private int _currentItemIndex;
+
+    private Action OnChangeInventory => () => ChangeCurrentItem(_currentItemIndex);
     
     public PlayerItems(
         Building building,
@@ -20,7 +24,9 @@ public class PlayerItems : IUpdatable
         IEnemiesCollection enemiesCollection)
     {
         _items = new Items(building, inventory, trapData, turretData, enemiesCollection);
-        
+        _inventory = inventory;
+        _inventory.InventoryChanged += OnChangeInventory;
+
         _digitsKeys = new List<KeyControl>
         {
             Keyboard.current.digit1Key,
@@ -33,6 +39,11 @@ public class PlayerItems : IUpdatable
             Keyboard.current.digit8Key,
             Keyboard.current.digit9Key,
         };
+    }
+
+    ~PlayerItems()
+    {
+        _inventory.InventoryChanged -= OnChangeInventory;
     }
     
     public void Update()
@@ -52,21 +63,26 @@ public class PlayerItems : IUpdatable
         {
             if (_digitsKeys[i].wasPressedThisFrame)
             {
-                ChangeCurrentItem(_inventory.GetHotspotItem(i).ItemType);
+                ChangeCurrentItem(i);
                 return;
             }
         }
     }
 
-    private void ChangeCurrentItem(ItemType itemType)
+    private void ChangeCurrentItem(int hotspotIndex)
+    {
+        ItemData hotSpotItem = _inventory.GetHotspotItem(hotspotIndex);
+        SetCurrentItem(hotSpotItem ? _items.AllItems[hotSpotItem.ItemType] : null);
+        _currentItemIndex = hotspotIndex;
+    }
+
+    private void SetCurrentItem(Item item)
     {
         HideItem();
-        
-        Item newItem = _items.AllItems[itemType];
-        
-        _showableItem = newItem as IShowable;
-        _updatableItem = newItem as IUpdatable;
-        _usableItem = newItem as IUsable;
+
+        _showableItem = item as IShowable;
+        _updatableItem = item as IUpdatable;
+        _usableItem = item as IUsable;
         
         ShowItem();
     }

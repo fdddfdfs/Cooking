@@ -3,6 +3,7 @@
 [Flags]
 public enum ItemType
 {
+    None = 0,
     Resource = 1,
     Boots = 2,
     Legs = 4,
@@ -10,5 +11,5 @@ public enum ItemType
     Head = 16,
     Turret = 32,
     Trap = 64,
-    Unspecified = Resource | Boots | Legs | Chest | Head,
+    Unspecified = 128 - 1,
 }
