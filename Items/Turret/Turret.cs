@@ -1,24 +1,33 @@
 ﻿using System;
+using UnityEngine;
 
 public class Turret : BuildableItem
 {
     protected override string BuildingResourceName => "Turret";
 
     private readonly IEnemiesCollection _enemiesCollection;
-    
+
+    private TurretBuilding _turretBuilding;
+
     public Turret(Building building, Inventory inventory, ItemData itemData, IEnemiesCollection enemiesCollection)
         : base(building, inventory, itemData)
     {
-        _enemiesCollection = enemiesCollection; 
+        _enemiesCollection = enemiesCollection;
     }
     
     protected override void InstantiateNewBuilding()
     {
+        if (_turretBuilding)
+        {
+            _turretBuilding.Activate();
+        }
+        
         base.InstantiateNewBuilding();
         
-        if(_buildableItem.TryGetComponent(out TurretBuilding trapBuilding))
+        if(_buildableItem.TryGetComponent(out TurretBuilding turretBuilding))
         {
-            trapBuilding.Init(_enemiesCollection);
+            turretBuilding.Init(_enemiesCollection);
+            _turretBuilding = turretBuilding;
         }
         else
         {
