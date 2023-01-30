@@ -13,9 +13,13 @@ public class TrapBuilding : MonoBehaviour
     
     public void Init()
     {
+        _triggerMask = LayerMask.NameToLayer("Mole");
+    }
+
+    public void Activate()
+    {
         _collider.enabled = true;
         _collider.isTrigger = true;
-        _triggerMask = LayerMask.GetMask("Mole");
     }
     
     private void Awake()
