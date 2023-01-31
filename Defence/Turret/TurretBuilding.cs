@@ -2,28 +2,38 @@
 using System.Threading.Tasks;
 using UnityEngine;
 
-public class TurretBuilding : MonoBehaviour
+public class TurretBuilding : MonoBehaviour, IRaycastable
 {
     private const float TurretDistance = 30;
     private const float RotationSmoothTime = 0.3f;
     private const float SameRotationTolerance = 5;
     private const int HitCooldownMilliseconds = 5000;
+    private const int MaxAmmo = 5;
 
     [SerializeField] private Transform _turretGun;
 
     private IEnemiesCollection _targets;
+    private TurretView _view;
+    private Inventory _inventory;
+    private ItemData _ammoData;
+    
     private IEnumerator<GameObject> _targetEnumerator;
     private bool _isEnabled;
-    
     private int _enemyLayer;
     private MeshRenderer _turretBarrelMesh;
+    
     private bool _isCooldown;
+    private int _ammo;
 
     private float _rotationVelocity;
-    
-    public void Init(IEnemiesCollection targets)
+
+    public void Init(IEnemiesCollection targets, TurretView view, Inventory inventory, ItemData ammoData)
     {
         _targets = targets;
+        _view = view;
+        _inventory = inventory;
+        _ammoData = ammoData;
+        
         _enemyLayer = LayerMask.NameToLayer("Mole");
         _turretBarrelMesh = _turretGun.GetComponentInChildren<MeshRenderer>();
     }
@@ -41,7 +51,7 @@ public class TurretBuilding : MonoBehaviour
 
         bool isPointedOnTarget = RotateTurret(target.transform.position);
 
-        if (!isPointedOnTarget || _isCooldown) {Debug.Log("returned"); return;}
+        if (!isPointedOnTarget || _isCooldown || _ammo == 0) {Debug.Log("returned"); return;}
         
         Vector3 currentPosition = _turretBarrelMesh.transform.position +
                                   _turretBarrelMesh.transform.forward * _turretBarrelMesh.bounds.size.magnitude / 2;
@@ -54,14 +64,15 @@ public class TurretBuilding : MonoBehaviour
         {
             if (hit.collider.gameObject.layer == _enemyLayer)
             {
-                Hit(target.transform.position);
+                Fire(target.transform.position);
                 Cooldown();
             }
         }
     }
 
-    private void Hit(Vector3 targetPosition)
+    private void Fire(Vector3 targetPosition)
     {
+        _ammo -= 1;
         Debug.Log("Hit");
     }
 
@@ -103,5 +114,24 @@ public class TurretBuilding : MonoBehaviour
         }
 
         return _targetEnumerator.Current;
+    }
+
+    public void Hit()
+    {
+        _view.ChangeViewActive(true);
+        _view.UpdateAmmoCount(_ammo, MaxAmmo);
+    }
+
+    public void UnHit()
+    {
+        _view.ChangeViewActive(false);
+    }
+
+    public void Use()
+    {
+        if (_inventory.RemoveItem(_ammoData, 1))
+        {
+            _ammo += 1;
+        }
     }
 }

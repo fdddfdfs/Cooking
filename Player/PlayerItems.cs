@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 
@@ -21,9 +22,11 @@ public class PlayerItems : IUpdatable
         Inventory inventory,
         ItemData trapData,
         ItemData turretData,
-        IEnemiesCollection enemiesCollection)
+        IEnemiesCollection enemiesCollection,
+        Canvas canvas,
+        ItemData turretAmmoData)
     {
-        _items = new Items(building, inventory, trapData, turretData, enemiesCollection);
+        _items = new Items(building, inventory, trapData, turretData, enemiesCollection, canvas, turretAmmoData);
         _inventory = inventory;
         _inventory.InventoryChanged += OnChangeInventory;
 
