@@ -9,15 +9,21 @@ public class PlayerItems : IUpdatable
     private readonly Items _items;
     private readonly IReadOnlyList<KeyControl> _digitsKeys;
     private readonly Inventory _inventory;
+    private readonly MenuOrderer _menuOrderer;
 
     private IShowable _showableItem;
     private IUpdatable _updatableItem;
     private IUsable _usableItem;
     private int _currentItemIndex;
 
-    private Action OnChangeInventory => () => ChangeCurrentItem(_currentItemIndex);
+    public Item CurrentItem { get; private set; }
+    
+    public ItemData CurrentItemData { get; private set; }
+
+    private Action ChangeInventory => () => ChangeCurrentItem(_currentItemIndex);
     
     public PlayerItems(
+        MenuOrderer menuOrderer,
         Building building,
         Inventory inventory,
         ItemData trapData,
@@ -28,7 +34,7 @@ public class PlayerItems : IUpdatable
     {
         _items = new Items(building, inventory, trapData, turretData, enemiesCollection, canvas, turretAmmoData);
         _inventory = inventory;
-        _inventory.InventoryChanged += OnChangeInventory;
+        _inventory.InventoryChanged += ChangeInventory;
 
         _digitsKeys = new List<KeyControl>
         {
@@ -42,11 +48,13 @@ public class PlayerItems : IUpdatable
             Keyboard.current.digit8Key,
             Keyboard.current.digit9Key,
         };
+
+        _menuOrderer = menuOrderer;
     }
 
     ~PlayerItems()
     {
-        _inventory.InventoryChanged -= OnChangeInventory;
+        _inventory.InventoryChanged -= ChangeInventory;
     }
     
     public void Update()
@@ -74,24 +82,41 @@ public class PlayerItems : IUpdatable
 
     private void ChangeCurrentItem(int hotspotIndex)
     {
-        ItemData hotSpotItem = _inventory.GetHotspotItem(hotspotIndex);
-        SetCurrentItem(hotSpotItem ? _items.AllItems[hotSpotItem.ItemType] : null);
         _currentItemIndex = hotspotIndex;
+        
+        ItemData hotSpotItem = _inventory.GetHotspotItem(hotspotIndex);
+
+        if (hotSpotItem && !_items.AllItems.ContainsKey(hotSpotItem))
+        {
+            Debug.LogWarning($"ItemType {hotSpotItem.ItemType} cannot be shown coz that`s not in AllItems");
+            SetCurrentItem(null, hotSpotItem);
+            return;
+        }
+        
+        SetCurrentItem(hotSpotItem ? _items.AllItems[hotSpotItem] : null, hotSpotItem);
     }
 
-    private void SetCurrentItem(Item item)
+    private void SetCurrentItem(Item item, ItemData itemData)
     {
         HideItem();
 
         _showableItem = item as IShowable;
         _updatableItem = item as IUpdatable;
         _usableItem = item as IUsable;
+
+        CurrentItem = item;
+        CurrentItemData = itemData;
         
         ShowItem();
     }
 
     private void UseItem()
     {
+        if (_menuOrderer.IsAnyMenuOpen)
+        {
+            return;
+        }
+        
         _usableItem?.Use();
     }
 
