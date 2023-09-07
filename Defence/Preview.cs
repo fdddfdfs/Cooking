@@ -7,7 +7,7 @@ public class Preview
     public BoxCollider BuildingCollider { get; private set; }
     
     public MeshRenderer BuildingMesh { get; private set; }
-
+    
     public void UpdatePreview(GameObject building)
     {
         Building = building;
