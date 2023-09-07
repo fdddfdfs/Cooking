@@ -1,15 +1,17 @@
 ﻿using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
-public class InventoryView : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDragHandler
+public class InventoryView : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDragHandler, IPointerClickHandler
 {
     private const string InventoryCellResourceName = "InventoryCell";
 
     [SerializeField] private Transform _mainInventory;
     [SerializeField] private Transform _gear;
-    [SerializeField] private TMP_Text _currentItemName;
-    [SerializeField] private TMP_Text _currentItemDescription;
+    [SerializeField] private TMP_Text _selectedItemName;
+    [SerializeField] private TMP_Text _selectedItemDescription;
 
     private InventoryCellView[] _gearCells;
     private InventoryCellView[] _mainInventoryCells;
@@ -18,6 +20,7 @@ public class InventoryView : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
     private Inventory _inventory;
 
     private int _dragCellId;
+    private Image _dragImage;
 
     public void Init(Inventory inventory, int inventoryGearSize, int inventoryMainSize)
     {
@@ -30,53 +33,34 @@ public class InventoryView : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
 
         _gearCells = CreateCells(_inventoryGearSize, _inventoryMainSize, inventoryCell, _gear);
         _mainInventoryCells = CreateCells(_inventoryMainSize,0, inventoryCell, _mainInventory);
+
+        var dragger = ResourcesLoader.InstantiateLoadedComponent<InventoryCellView>(inventoryCell);
+        dragger.transform.SetParent(_mainInventory.parent, false);
+        _dragImage = dragger.Image;
+        _dragImage.gameObject.SetActive(false);
+        _dragImage.raycastTarget = false;
+        Destroy(dragger);
     }
 
-    public void ChangeActive(bool active)
-    {
-        gameObject.SetActive(active);
-    }
-
-    public void SwapActive()
-    {
-        if (gameObject.activeSelf)
-        {
-            gameObject.SetActive(false);
-            Cursor.visible = false;
-            Cursor.lockState = CursorLockMode.Locked;
-        }
-        else
-        {
-            gameObject.SetActive(true);
-            Cursor.visible = true;
-            Cursor.lockState = CursorLockMode.None;
-        }
-
-    }
-    
     public void UpdateItem(int index, int newCount, ItemData itemData)
     {
         Sprite itemSprite = itemData ? itemData.Sprite : null;
+
+        InventoryCellView inventoryCellView = GetInventoryView(index);
         
-        if (index > _inventoryMainSize)
-        {
-            int realIndex = index - _inventoryMainSize;
-            _gearCells[realIndex].ChangeCellItemSprite(itemSprite);
-            _gearCells[realIndex].ChangeCellItemCount(newCount);
-        }
-        else
-        {
-            _mainInventoryCells[index].ChangeCellItemSprite(itemSprite);
-            _mainInventoryCells[index].ChangeCellItemCount(newCount);
-        }
-        
-        UpdateCurrentItem(itemData);
+        inventoryCellView.ChangeCellItemCount(newCount);
+        inventoryCellView.ChangeCellItemSprite(itemSprite);
+    }
+    
+    public void UpdateSelectedItem(ItemData itemData)
+    {
+        _selectedItemName.text = itemData ? itemData.Name : string.Empty;
+        _selectedItemDescription.text = itemData ? itemData.Description : string.Empty;
     }
 
-    private void UpdateCurrentItem(ItemData itemData)
+    private InventoryCellView GetInventoryView(int index)
     {
-        _currentItemName.text = itemData ? itemData.Name : string.Empty;
-        _currentItemDescription.text = itemData ? itemData.Description : string.Empty;
+        return index < _inventoryMainSize ? _mainInventoryCells[index] : _gearCells[index - _inventoryMainSize];
     }
 
     private static InventoryCellView[] CreateCells(int size,int idOffset, GameObject prefab, Transform parent)
@@ -96,11 +80,14 @@ public class InventoryView : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
     public void OnBeginDrag(PointerEventData eventData)
     {
         if (eventData.pointerEnter == null) return;
-        
+
         var inventoryCellView = eventData.pointerEnter.GetComponentInParent<InventoryCellView>();
         if (inventoryCellView)
         {
-            _dragCellId = inventoryCellView.ID;
+            _dragCellId = inventoryCellView.Index;
+            _dragImage.gameObject.SetActive(true);
+            _dragImage.sprite = inventoryCellView.Sprite;
+            inventoryCellView.ChangeCellItemSprite(null);
         }
         else
         {
@@ -111,16 +98,28 @@ public class InventoryView : MonoBehaviour, IBeginDragHandler, IEndDragHandler, 
     public void OnEndDrag(PointerEventData eventData)
     {
         if (eventData.pointerEnter == null || _dragCellId == -1) return;
+        
+        GetInventoryView(_dragCellId).ChangeCellItemSprite(_dragImage.sprite);
+        _dragImage.gameObject.SetActive(false);
 
         var inventoryCellView = eventData.pointerEnter.GetComponentInParent<InventoryCellView>();
         if (inventoryCellView)
         {
-            _inventory.SwapItems(_dragCellId, inventoryCellView.ID);
+            _inventory.SwapItems(_dragCellId, inventoryCellView.Index);
         }
     }
 
     public void OnDrag(PointerEventData eventData)
     {
-        
+        _dragImage.transform.position = Mouse.current.position.ReadValue();
+    }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        var inventoryCellView = eventData.pointerEnter.GetComponentInParent<InventoryCellView>();
+        if (inventoryCellView)
+        {
+            _inventory.ShowSelectedItem(inventoryCellView.Index);
+        }
     }
 }

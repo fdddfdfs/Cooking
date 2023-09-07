@@ -11,11 +11,15 @@ public class InventoryCellView : MonoBehaviour
     private readonly string _zeroCount = string.Empty;
     private bool _isEmpty;
     
-    public int ID { get; private set; }
+    public int Index { get; private set; }
 
-    public void Init(int id)
+    public Sprite Sprite => _itemImage.sprite;
+
+    public Image Image => _itemImage;
+
+    public void Init(int index)
     {
-        ID = id;
+        Index = index;
         _isEmpty = true;
         _count.text = _zeroCount;
     }

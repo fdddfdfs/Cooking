@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class Inventory
+public class Inventory : MenuWithView<InventoryView>
 {
     private const string InventoryViewResourceName = "InventoryView";
     private const int InventoryGearSize = 4;
@@ -9,38 +9,22 @@ public class Inventory
     private const int InventoryHotspotSize = 9;
     private const int InventoryHotspotStartIndex = InventoryMainSize - InventoryHotspotSize;
 
-    private readonly InventoryView _inventoryView;
-
     private readonly InventoryCell[] _inventory;
     private readonly InventoryCell[] _gear;
 
     public event Action InventoryChanged; 
 
-    public Inventory(Canvas canvas)
+    public Inventory(Canvas canvas) : base(canvas, InventoryViewResourceName)
     {
-        _inventoryView = ResourcesLoader.InstantiateLoadComponent<InventoryView>(InventoryViewResourceName);
-        _inventoryView.Init(this, InventoryGearSize, InventoryMainSize);
-        _inventoryView.transform.SetParent(canvas.transform, false);
+        _view.Init(this, InventoryGearSize, InventoryMainSize);
 
         _inventory = CreateInventoryCells(InventoryMainSize, 0 , ItemType.Unspecified);
         _gear = CreateInventoryCells(
             InventoryGearSize,
             InventoryMainSize,
             new[] { ItemType.Head, ItemType.Chest, ItemType.Legs, ItemType.Boots });
-
-        ChangeActive(false);
     }
 
-    public void ChangeActive(bool active)
-    {
-        _inventoryView.ChangeActive(active);
-    }
-
-    public void SwapActive()
-    {
-        _inventoryView.SwapActive();
-    }
-    
     public int AddItem(ItemData item, int count)
     {
         int firstEmptyIndex = -1;
@@ -128,6 +112,11 @@ public class Inventory
         return _inventory[InventoryHotspotStartIndex + index].ItemData;
     }
 
+    public void ShowSelectedItem(int index)
+    {
+        _view.UpdateSelectedItem(GetCell(index).ItemData);
+    }
+
     private bool IsEnoughItems(ItemData item, int count)
     {
         for (int i = InventoryMainSize - 1; i >= 0; i--)
@@ -149,9 +138,9 @@ public class Inventory
     private InventoryCell[] CreateInventoryCells(int count, int indexOffset, ItemType cellType)
     {
         var inventoryCells = new InventoryCell[count];
-        for (int i = 0; i < count; i++)
+        for (var i = 0; i < count; i++)
         {
-            inventoryCells[i] = new InventoryCell(i + indexOffset, _inventoryView, cellType);
+            inventoryCells[i] = new InventoryCell(i + indexOffset, _view, cellType);
         }
 
         return inventoryCells;
@@ -159,10 +148,15 @@ public class Inventory
     
     private InventoryCell[] CreateInventoryCells(int count, int indexOffset, ItemType[] cellTypes)
     {
-        var inventoryCells = new InventoryCell[count];
-        for (int i = 0; i < count; i++)
+        if (count != cellTypes.Length)
         {
-            inventoryCells[i] = new InventoryCell(i + indexOffset, _inventoryView, cellTypes[i]);
+            throw new Exception("Count and cellTypes.Length must be equal");
+        }
+        
+        var inventoryCells = new InventoryCell[count];
+        for (var i = 0; i < count; i++)
+        {
+            inventoryCells[i] = new InventoryCell(i + indexOffset, _view, cellTypes[i]);
         }
 
         return inventoryCells;
@@ -170,11 +164,6 @@ public class Inventory
 
     private InventoryCell GetCell(int index)
     {
-        if (index >= InventoryMainSize)
-        {
-            return _gear[index - InventoryMainSize];
-        }
-        
-        return _inventory[index];
+        return index >= InventoryMainSize ? _gear[index - InventoryMainSize] : _inventory[index];
     }
 }

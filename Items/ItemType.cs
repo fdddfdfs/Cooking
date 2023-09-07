@@ -9,7 +9,7 @@ public enum ItemType
     Legs = 4,
     Chest = 8,
     Head = 16,
-    Turret = 32,
-    Trap = 64,
-    Unspecified = 128 - 1,
+    Defence,
+    Seed = 128,
+    Unspecified = 256 - 1,
 }

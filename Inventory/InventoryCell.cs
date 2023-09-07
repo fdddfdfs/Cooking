@@ -1,6 +1,4 @@
-﻿using UnityEngine;
-
-public class InventoryCell
+﻿public class InventoryCell
 {
     private readonly int _index;
     private readonly InventoryView _inventoryView;
