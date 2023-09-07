@@ -11,9 +11,9 @@ public class TurretView : MonoBehaviour
         _currentAmmo.text = $"{count.ToString()}/{maxCount.ToString()}";
     }
 
-    public void ChangeViewActive(bool active)
+    public void ChangeViewActive(bool active, bool activeHitText)
     {
-        _hitText.gameObject.SetActive(active);
+        _hitText.gameObject.SetActive(activeHitText);
         _currentAmmo.gameObject.SetActive(active);
     }
 }

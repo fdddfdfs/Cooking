@@ -9,6 +9,7 @@ public class TurretBuilding : MonoBehaviour, IRaycastable
     private const float SameRotationTolerance = 5;
     private const int HitCooldownMilliseconds = 5000;
     private const int MaxAmmo = 5;
+    private const float FireForce = 10;
 
     [SerializeField] private Transform _turretGun;
 
@@ -16,6 +17,7 @@ public class TurretBuilding : MonoBehaviour, IRaycastable
     private TurretView _view;
     private Inventory _inventory;
     private ItemData _ammoData;
+    private Pool<GameObject> _ammoPool;
     
     private IEnumerator<GameObject> _targetEnumerator;
     private bool _isEnabled;
@@ -27,12 +29,18 @@ public class TurretBuilding : MonoBehaviour, IRaycastable
 
     private float _rotationVelocity;
 
-    public void Init(IEnemiesCollection targets, TurretView view, Inventory inventory, ItemData ammoData)
+    public void Init(
+        IEnemiesCollection targets,
+        TurretView view,
+        Inventory inventory,
+        ItemData ammoData,
+        Pool<GameObject> ammoPool)
     {
         _targets = targets;
         _view = view;
         _inventory = inventory;
         _ammoData = ammoData;
+        _ammoPool = ammoPool;
         
         _enemyLayer = LayerMask.NameToLayer("Mole");
         _turretBarrelMesh = _turretGun.GetComponentInChildren<MeshRenderer>();
@@ -41,6 +49,28 @@ public class TurretBuilding : MonoBehaviour, IRaycastable
     public void Activate()
     {
         _isEnabled = true;
+    }
+    
+    public void Hit()
+    {
+        _view.ChangeViewActive(true, _ammo < MaxAmmo);
+        _view.UpdateAmmoCount(_ammo, MaxAmmo);
+    }
+
+    public void UnHit()
+    {
+        _view.ChangeViewActive(false, false);
+    }
+
+    public void Use()
+    {
+        if (_ammo == MaxAmmo) return;
+        
+        if (_inventory.RemoveItem(_ammoData, 1))
+        {
+            _ammo += 1;
+            _view.UpdateAmmoCount(_ammo, MaxAmmo);
+        }
     }
 
     private void Update()
@@ -51,10 +81,9 @@ public class TurretBuilding : MonoBehaviour, IRaycastable
 
         bool isPointedOnTarget = RotateTurret(target.transform.position);
 
-        if (!isPointedOnTarget || _isCooldown || _ammo == 0) {Debug.Log("returned"); return;}
-        
-        Vector3 currentPosition = _turretBarrelMesh.transform.position +
-                                  _turretBarrelMesh.transform.forward * _turretBarrelMesh.bounds.size.magnitude / 2;
+        if (!isPointedOnTarget || _isCooldown || _ammo == 0) return;
+
+        Vector3 currentPosition = GetBarrelEndPosition();
         if (Physics.Raycast(
                 currentPosition,
                 target.transform.position - currentPosition,
@@ -64,16 +93,29 @@ public class TurretBuilding : MonoBehaviour, IRaycastable
         {
             if (hit.collider.gameObject.layer == _enemyLayer)
             {
-                Fire(target.transform.position);
+                Fire(target.transform);
                 Cooldown();
             }
         }
     }
 
-    private void Fire(Vector3 targetPosition)
+    private Vector3 GetBarrelEndPosition()
+    {
+        Vector3 position = _turretBarrelMesh.transform.position;
+        Vector3 offset = _turretBarrelMesh.transform.forward * _turretBarrelMesh.bounds.size.magnitude / 2;
+
+        return position + offset;
+    }
+
+    private void Fire(Transform target)
     {
         _ammo -= 1;
-        Debug.Log("Hit");
+        _view.UpdateAmmoCount(_ammo, MaxAmmo);
+        GameObject ammo = _ammoPool.GetItem();
+        ammo.transform.position = GetBarrelEndPosition();
+
+        Vector3 direction = (target.transform.position - ammo.transform.position).normalized;
+        ammo.GetComponent<Rigidbody>().AddForce(direction * FireForce, ForceMode.Impulse);
     }
 
     private async void Cooldown()
@@ -114,24 +156,5 @@ public class TurretBuilding : MonoBehaviour, IRaycastable
         }
 
         return _targetEnumerator.Current;
-    }
-
-    public void Hit()
-    {
-        _view.ChangeViewActive(true);
-        _view.UpdateAmmoCount(_ammo, MaxAmmo);
-    }
-
-    public void UnHit()
-    {
-        _view.ChangeViewActive(false);
-    }
-
-    public void Use()
-    {
-        if (_inventory.RemoveItem(_ammoData, 1))
-        {
-            _ammo += 1;
-        }
     }
 }
