@@ -19,8 +19,9 @@ public abstract class BuildableItem : Item, IUsable, IUpdatable, IShowable
 
     public void Use()
     {
-        if (_building.SetBuilding())
+        if (_building.IsBuildable)
         {
+            _building.SetBuilding();
             InstantiateNewBuilding();
             _building.UpdateBuilding(_buildableItem);
             _inventory.RemoveItem(_itemData, 1);

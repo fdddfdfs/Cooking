@@ -13,11 +13,12 @@ public class Building
     private readonly Preview _buildingPreview;
     private readonly Camera _playerCamera;
     
-    private bool _isBuildable;
     private Material _greenMaterial;
     private Material _redMaterial;
     private GameObject _currentBuilding;
     private Material _currentBuildingMeshMaterial;
+    
+    public bool IsBuildable { get; private set; }
 
     public Building(Camera playerCamera, Material greenMaterial, Material redMaterial)
     {
@@ -26,8 +27,8 @@ public class Building
         _redMaterial = redMaterial;
         
         _overlappedColliders = new Collider[OverlappedCollidersMaxSize];
-        _layerMask = LayerMask.GetMask("Terrain");
-        _layerMaskForCollider = LayerMask.GetMask("Terrain", "Default");
+        _layerMask = LayerMask.GetMask("Terrain", "Default", "WalkableTerrain");
+        _layerMaskForCollider = LayerMask.GetMask("Terrain", "Default", "WalkableTerrain");
         _buildingPreview = new Preview();
     }
 
@@ -38,14 +39,14 @@ public class Building
         _currentBuilding = building;
         _buildingPreview.UpdatePreview(building);
         _currentBuildingMeshMaterial = _buildingPreview.BuildingMesh.material;
+        _buildingPreview.BuildingCollider.isTrigger = true;
     }
 
-    public bool SetBuilding()
+    public void SetBuilding()
     {
         _currentBuilding = null;
         _buildingPreview.BuildingMesh.material = _currentBuildingMeshMaterial;
-
-        return _isBuildable;
+        _buildingPreview.BuildingCollider.isTrigger = true;
     }
 
     public void ChangeBuildingActive(bool state)
@@ -56,11 +57,13 @@ public class Building
     public void UpdateBuildableObject()
     {
         Vector3 newPosition = GetRayPosition(_layerMask);
+        
         if (newPosition != default)
         {
             _buildingPreview.Building.transform.position =
                 newPosition +
-                Vector3.up * _buildingPreview.BuildingCollider.size.y / 2;
+                Vector3.up * _buildingPreview.BuildingMesh.bounds.size.y / 2;
+                //Vector3.up * _buildingPreview.BuildingCollider.size.y / 2;
             
             _buildingPreview.ChangeActive(true);
             ChangePreviewMesh();
@@ -82,12 +85,12 @@ public class Building
         if (!IsCollidingWithOtherBuildings(_buildingPreview.BuildingCollider, _layerMaskForCollider))
         {
             ChangeModelMesh(_buildingPreview.BuildingMesh, true);
-            _isBuildable = true;
+            IsBuildable = true;
         }
         else
         {
             ChangeModelMesh(_buildingPreview.BuildingMesh, false);
-            _isBuildable = false;
+            IsBuildable = false;
         }
     }
 
